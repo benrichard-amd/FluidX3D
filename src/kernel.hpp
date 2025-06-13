@@ -1,20 +1,40 @@
 #pragma once
 
+#include <fstream>
+#include <sstream>
+#include <filesystem>
+
 #include "utilities.hpp"
 #define R(...) string(" "#__VA_ARGS__" ") // evil stringification macro, similar syntax to raw string R"(...)"
 
 string opencl_c_container(); // outsourced to kernel.cpp
 string get_opencl_c_code() {
-	string r = opencl_c_container();
-	r = replace(r, " ", "\n"); // replace all spaces by new lines
-	r = replace(r, "#ifdef\n", "#ifdef "); // except for the arguments after some preprocessor options that need to be in the same line
-	r = replace(r, "#ifndef\n", "#ifndef ");
-	r = replace(r, "#define\n", "#define "); // #define with two arguments will not work
-	r = replace(r, "#undef\n", "#undef ");
-	r = replace(r, "#if\n", "#if "); // don't leave any spaces in arguments
-	r = replace(r, "#elif\n", "#elif "); // don't leave any spaces in arguments
-	r = replace(r, "#pragma\n", "#pragma ");
-	return "\n"+r;
+
+
+#ifdef GRAPHICS
+	std::string file_path = "cl/kernels_graphics.cl";
+#else
+	std::string file_path = "cl/kernels.cl";
+#endif
+
+	if(std::filesystem::exists(file_path)) {
+		print_info("Loading CL code from file");
+		std::ifstream f(file_path);
+		std::ostringstream ss;
+		ss << f.rdbuf();
+		return ss.str();
+	} else {
+		string r = opencl_c_container();
+		r = replace(r, " ", "\n"); // replace all spaces by new lines
+		r = replace(r, "#ifdef\n", "#ifdef "); // except for the arguments after some preprocessor options that need to be in the same line
+		r = replace(r, "#ifndef\n", "#ifndef ");
+		r = replace(r, "#define\n", "#define "); // #define with two arguments will not work
+		r = replace(r, "#undef\n", "#undef ");
+		r = replace(r, "#if\n", "#if "); // don't leave any spaces in arguments
+		r = replace(r, "#elif\n", "#elif "); // don't leave any spaces in arguments
+		r = replace(r, "#pragma\n", "#pragma ");
+		return "\n"+r;
+	}
 }
 
 // everything below is just for syntax highlighting in the editor, this does not change any functionality

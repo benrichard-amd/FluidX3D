@@ -110,6 +110,16 @@ LBM_Domain::LBM_Domain(const Device_Info& device_info, const uint Nx, const uint
 #else // GRAPHICS
 	opencl_c_code = device_defines()+get_opencl_c_code();
 #endif // GRAPHICS
+
+#ifdef GRAPHICS
+	std::string file_name = "kernels_graphics.cl";
+#else	
+	std::string file_name = "kernels.cl";
+#endif
+
+	std::ofstream f(file_name);
+	f << opencl_c_code;
+	f.close();
 	this->device = Device(device_info, opencl_c_code);
 	print_info("Allocating memory. This may take a few seconds.");
 	allocate(device); // lbm first
