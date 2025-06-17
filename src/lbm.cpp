@@ -104,21 +104,20 @@ LBM_Domain::LBM_Domain(const Device_Info& device_info, const uint Nx, const uint
 	this->particles_N = particles_N;
 	this->particles_rho = particles_rho;
 	string opencl_c_code;
+
+	string src = get_opencl_c_code();
+
 #ifdef GRAPHICS
 	graphics = Graphics(this);
-	opencl_c_code = device_defines()+graphics.device_defines()+get_opencl_c_code();
+	opencl_c_code = device_defines()+graphics.device_defines()+src;
 #else // GRAPHICS
-	opencl_c_code = device_defines()+get_opencl_c_code();
+	opencl_c_code = device_defines()+src;
 #endif // GRAPHICS
 
-#ifdef GRAPHICS
-	std::string file_name = "kernels_graphics.cl";
-#else	
-	std::string file_name = "kernels.cl";
-#endif
+	const std::string file_name = "kernels.cl";
 
 	std::ofstream f(file_name);
-	f << opencl_c_code;
+	f << src;
 	f.close();
 	this->device = Device(device_info, opencl_c_code);
 	print_info("Allocating memory. This may take a few seconds.");

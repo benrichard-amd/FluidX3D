@@ -1,49 +1,4 @@
 
-#define def_Nx 256u
-#define def_Ny 256u
-#define def_Nz 256u
-#define def_N 16777216ul
-#define uxx uint
-#define def_Dx 1u
-#define def_Dy 1u
-#define def_Dz 1u
-#define def_Ox 0
-#define def_Oy 0
-#define def_Oz 0
-#define def_Ax 65536u
-#define def_Ay 65536u
-#define def_Az 65536u
-#define def_domain_offset_x 0.00000000f
-#define def_domain_offset_y 0.00000000f
-#define def_domain_offset_z 0.00000000f
-#define D3Q19
-#define def_velocity_set 19u
-#define def_dimensions 3u
-#define def_transfers 5u
-#define def_c 0.57735027f
-#define def_w 2.85714296E-1f
-#define def_w0 (1.0f / 3.0f)
-#define def_ws (1.0f / 18.0f)
-#define def_we (1.0f / 36.0f)
-#define SRT
-#define TYPE_S 0x01
-#define TYPE_E 0x02
-#define TYPE_T 0x04
-#define TYPE_F 0x08
-#define TYPE_I 0x10
-#define TYPE_G 0x20
-#define TYPE_X 0x40
-#define TYPE_Y 0x80
-#define TYPE_MS 0x03
-#define TYPE_BO 0x03
-#define TYPE_IF 0x18
-#define TYPE_IG 0x30
-#define TYPE_GI 0x38
-#define TYPE_SU 0x38
-#define fpxx half
-#define fpxx_copy ushort
-#define load(p, o) vload_half(o, p) * 3.0517578E-5f
-#define store(p, o, x) vstore_half_rte((x) * 32768.0f, o, p)
 
 float sq(const float x) { return x * x; }
 
