@@ -215,6 +215,7 @@ private:
 	void sanity_checks_initialization(); // sanity checks during initialization on used extensions based on used flags
 	void initialize(); // write all data fields to device and call kernel_initialize
 	void do_time_step(); // call kernel_stream_collide to perform one LBM time step
+	void do_time_steps(int steps); // call kernel_stream_collide to perform one or more LBM time steps
 
 	void communicate_field(const enum_transfer_field field, const uint bytes_per_cell);
 

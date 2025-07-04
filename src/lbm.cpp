@@ -892,6 +892,39 @@ void LBM::initialize() { // write all data fields to device and call kernel_init
 	initialized = true;
 }
 
+void LBM::do_time_steps(int steps)
+{
+	for(int i = 0; i < steps; i++) {
+#ifdef SURFACE
+		for(uint d=0u; d<get_D(); d++) lbm_domain[d]->enqueue_surface_0();
+#endif // SURFACE
+		for(uint d=0u; d<get_D(); d++) lbm_domain[d]->enqueue_stream_collide(); // run LBM stream_collide kernel after domain communication
+#if defined(SURFACE) || defined(GRAPHICS)
+		communicate_rho_u_flags(); // rho/u/flags halo data is required for SURFACE extension, and u halo data is required for Q-criterion rendering
+#endif // SURFACE || GRAPHICS
+#ifdef SURFACE
+		for(uint d=0u; d<get_D(); d++) lbm_domain[d]->enqueue_surface_1();
+		communicate_flags();
+		for(uint d=0u; d<get_D(); d++) lbm_domain[d]->enqueue_surface_2();
+		communicate_flags();
+		for(uint d=0u; d<get_D(); d++) lbm_domain[d]->enqueue_surface_3();
+		communicate_phi_massex_flags();
+#endif // SURFACE
+		communicate_fi();
+#ifdef TEMPERATURE
+#ifdef GRAPHICS
+		communicate_T(); // T halo data is required for field_slice rendering
+#endif // GRAPHICS
+		communicate_gi();
+#endif // TEMPERATURE
+#ifdef PARTICLES
+		for(uint d=0u; d<get_D(); d++) lbm_domain[d]->enqueue_integrate_particles(); // intgegrate particles forward in time and couple particles to fluid
+#endif // PARTICLES
+	}
+	if(get_D()==1u) for(uint d=0u; d<get_D(); d++) lbm_domain[d]->finish_queue(); // this additional domain synchronization barrier is only required in single-GPU, as communication calls already provide all necessary synchronization barriers in multi-GPU
+	for(uint d=0u; d<get_D(); d++) lbm_domain[d]->increment_time_step(steps);
+}
+
 void LBM::do_time_step() { // call kernel_stream_collide to perform one LBM time step
 #ifdef SURFACE
 	for(uint d=0u; d<get_D(); d++) lbm_domain[d]->enqueue_surface_0();
@@ -932,15 +965,19 @@ void LBM::run(const ulong steps, const ulong total_steps) { // initializes the L
 #endif // GRAPHICS
 	}
 	Clock clock;
-	for(ulong i=1ull; i<=steps; i++) {
 #if defined(INTERACTIVE_GRAPHICS)||defined(INTERACTIVE_GRAPHICS_ASCII)
+	for(ulong i=1ull; i<=steps; i++) {
 		while(!key_P&&running) sleep(0.016);
 		if(!running) break;
-#endif // INTERACTIVE_GRAPHICS_ASCII || INTERACTIVE_GRAPHICS
 		clock.start();
 		do_time_step();
 		info.update(clock.stop());
 	}
+#else// INTERACTIVE_GRAPHICS_ASCII || INTERACTIVE_GRAPHICS
+	clock.start();
+	do_time_steps(steps);
+	info.update(clock.stop(), steps);
+#endif
 	if(get_D()>1u) for(uint d=0u; d<get_D(); d++) lbm_domain[d]->finish_queue(); // wait for everything to finish (multi-GPU only)
 }
 
