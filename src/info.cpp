@@ -13,7 +13,8 @@ void Info::append(const ulong steps, const ulong total_steps, const ulong t) {
 		this->steps = total_steps; // has to be executed before info.print_initialize()
 	}
 }
-void Info::update(const double dt, const int steps) {
+void Info::update(const double dt, int steps) {
+	steps = std::max(steps, 1);
 	this->runtime_lbm_timestep_last = dt/(double)steps; // exact dt
 	const double sf = 0.3 / (double)steps; // smooth factor. runtime_lbm_timestep_smooth was converging more slowly with multiple steps between calls to update()
 	this->runtime_lbm_timestep_smooth = (dt/(double)steps+sf)/(sf/runtime_lbm_timestep_smooth+1.0); // smoothed dt
